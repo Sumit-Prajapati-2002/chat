@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+import { AuthProvider } from "./context/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Create chat App", 
@@ -14,9 +14,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <AuthProvider>
       <body>
         {children}
       </body>
+      </AuthProvider>
+      
     </html>
   );
 }

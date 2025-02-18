@@ -1,13 +1,14 @@
-// components/LoginForm.tsx
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../auth/firebaseConfig"; // Import Firebase auth
+import axios from "axios";
 
 interface LoginFormProps {
   setLoginOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  startSession: () => void; // Accept the startSession function as a prop
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen, startSession }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen }) => {
     try {
       await signInWithEmailAndPassword(auth, email, password); // Firebase login
       setLoginOpen(false); // Close the modal on success
+      startSession(); // Start the session after successful login
     } catch (err) {
       setError("Failed to log in. Please check your credentials.");
     }

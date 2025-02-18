@@ -1,35 +1,44 @@
-// components/Navbar.tsx
+import { useAuth } from "@/app/context/AuthProvider";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { auth } from "../auth/firebaseConfig"; // Add this line to import auth
+import { signOut } from "firebase/auth";
+import { auth } from "../auth/firebaseConfig";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 
 export default function Navbar() {
+  const { user, loading } = useAuth();
   const [isLoginOpen, setLoginOpen] = useState(false);
-  const [isRegister, setIsRegister] = useState(false); // To toggle between login and register form
-  const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const handleLogout = async () => {
-    setLoading(true);
+    setLogoutLoading(true);
     try {
-      await auth.signOut(); // Firebase logout
+      await signOut(auth);
     } catch (err) {
       console.error("Logout failed", err);
     }
-    setLoading(false);
+    setLogoutLoading(false);
   };
 
   return (
     <header className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-b border-purple-500/20 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          <h1 className="text-2xl font-bold text-white">Kanun Ka Kura</h1>
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-white">Kanun Ka Kura</h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {!auth.currentUser ? (
+            {loading ? (
+              <p className="text-white">Loading...</p>
+            ) : user ? (
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all duration-300"
+                disabled={logoutLoading}
+              >
+                {logoutLoading ? "Logging out..." : "Logout"}
+              </button>
+            ) : (
               <>
                 <button
                   onClick={() => setLoginOpen(true)}
@@ -38,25 +47,20 @@ export default function Navbar() {
                   Login
                 </button>
                 <button
-                  onClick={() => { setLoginOpen(true); setIsRegister(true); }}
+                  onClick={() => {
+                    setLoginOpen(true);
+                    setIsRegister(true);
+                  }}
                   className="px-6 py-2 bg-transparent hover:bg-purple-600/20 text-white border border-purple-500 rounded-lg shadow-lg transition-all duration-300"
                 >
                   Register
                 </button>
               </>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all duration-300"
-              >
-                Logout
-              </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Modal for Login/Register */}
       {isLoginOpen && (
         <motion.div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
@@ -64,15 +68,18 @@ export default function Navbar() {
         >
           <motion.div
             className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full"
-            onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
+            onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-3xl font-bold mb-4 text-center text-purple-600">{isRegister ? "Register" : "Login"}</h2>
+            <h2 className="text-3xl font-bold mb-4 text-center text-purple-600">
+              {isRegister ? "Register" : "Login"}
+            </h2>
 
-            {/* Conditionally render Login or Register form */}
             {isRegister ? (
               <RegisterForm setLoginOpen={setLoginOpen} />
             ) : (
-              <LoginForm setLoginOpen={setLoginOpen} />
+              <LoginForm setLoginOpen={setLoginOpen} startSession={function (): void {
+                  throw new Error("Function not implemented.");
+                } } />
             )}
 
             <div className="mt-4 text-center">

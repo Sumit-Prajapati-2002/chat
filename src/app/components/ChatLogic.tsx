@@ -1,23 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API_URL = "http://23.132.28.30:8000"; // Base URL
+// API base URL
+const API_URL = "http://23.132.28.30:8000"; 
 
 export default function useChatLogic() {
-  const [message, setMessage] = useState<string>("");
-  const [chatHistory, setChatHistory] = useState<any[]>([]);
-  const [isSending, setIsSending] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [citations, setCitations] = useState<string[]>([]);
+  const [message, setMessage] = useState<string>(""); // Store user input
+  const [chatHistory, setChatHistory] = useState<any[]>([]); // Store chat history
+  const [isSending, setIsSending] = useState<boolean>(false); // Track sending state
+  const [error, setError] = useState<string | null>(null); // Store any errors
+  const [suggestions, setSuggestions] = useState<string[]>([]); // Store suggestions
+  const [citations, setCitations] = useState<string[]>([]); // Store citations
 
+  // Start session function (connects to backend API)
   const startSession = async () => {
     try {
       const response = await axios.get(`${API_URL}/start-session`);
-  
-      // Handle response correctly
       if (response.data.user_id) {
         localStorage.setItem('user_id', response.data.user_id); // Store user_id in localStorage
         console.log("Session started with user_id:", response.data.user_id);
@@ -25,16 +25,47 @@ export default function useChatLogic() {
         console.error("No user_id returned from the backend.");
       }
     } catch (error: any) {
-      if (error.response) {
-        console.error("Error status:", error.response.status);
-        console.error("Error data:", error.response.data);
-      } else {
-        console.error("Error starting session:", error.message);
+      console.error("Error starting session:", error);
+    }
+  };
+
+  // Base64 encode function
+  const encodeBase64 = (data: string) => {
+    return btoa(unescape(encodeURIComponent(data))); // Encode data to Base64
+  };
+
+  // Base64 decode function
+  const decodeBase64 = (data: string) => {
+    return decodeURIComponent(escape(atob(data))); // Decode data from Base64
+  };
+
+  // Function to save chat history to localStorage in Base64 format
+  const saveChatHistory = (chatHistory: any[]) => {
+    const encodedHistory = chatHistory.map((message) => ({
+      ...message,
+      content: encodeBase64(message.content), // Encode each message content in Base64
+    }));
+    localStorage.setItem('chatHistory', JSON.stringify(encodedHistory));
+  };
+
+  // Function to load chat history from localStorage
+  const loadChatHistory = () => {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+      try {
+        // Parse and decode each message's content from Base64
+        const decodedHistory = JSON.parse(savedHistory).map((message: any) => ({
+          ...message,
+          content: decodeBase64(message.content), // Decode each message content from Base64
+        }));
+        setChatHistory(decodedHistory);
+      } catch (error) {
+        console.error("Error loading chat history:", error); // Optionally log error
       }
     }
   };
 
-  // Send message and receive a response from the backend
+  // Function to send message and receive a response from the backend
   const sendMessage = async (message: string) => {
     if (!message.trim() || isSending) return;
 
@@ -46,14 +77,23 @@ export default function useChatLogic() {
       const response = await axios.post(
         `${API_URL}/ask`,
         { question: message },
-        { headers: { "User-ID": userId || "" } } // Pass user_id instead of session_id
+        { headers: { "User-ID": userId || "" } }
       );
       setChatHistory((prev) => [
         ...prev,
         { role: "bot", content: response.data.response || "No response from bot." },
       ]);
-
       setCitations(response.data.citations || []);
+
+      // Save bot response to localStorage (encoded in Base64)
+      const botMessage = response.data.response || "No response from bot.";
+      setChatHistory((prev) => [
+        ...prev,
+        { role: "bot", content: botMessage },
+      ]);
+
+      // Save both user and bot messages to localStorage (encoded)
+      saveChatHistory([...chatHistory, { role: "user", content: message }, { role: "bot", content: botMessage }]);
 
       if (response.data.suggestions?.length) {
         setSuggestions(response.data.suggestions);
@@ -64,7 +104,7 @@ export default function useChatLogic() {
       setChatHistory((prev) => [...prev, { role: "error", content: errorMessage }]);
     } finally {
       setIsSending(false);
-      setMessage(""); // Clear message input after sending
+      setMessage(""); // Clear input after sending
     }
   };
 
@@ -78,35 +118,32 @@ export default function useChatLogic() {
     try {
       const userId = localStorage.getItem("user_id");
       const response = await axios.get(`${API_URL}/ask`, {
-        params: { query: input },
+        params: { query: input }, // Send input as query parameter
         headers: { "User-ID": userId || "" },
       });
 
       if (response.data.suggestions) {
-        setSuggestions(response.data.suggestions);
+        setSuggestions(response.data.suggestions); // Set suggestions from response
       } else {
-        setSuggestions([]);
+        setSuggestions([]); // Clear suggestions if no data
       }
     } catch (error) {
       console.error("Error fetching suggestions:", error);
-      setSuggestions([]); // Handle error
+      setSuggestions([]); // Handle error and clear suggestions
     }
   };
 
- 
-
-  // Get a specific file from the backend by its name
-  const getFile = async (fileName: string) => {
-    try {
-      const userId = localStorage.getItem("user_id");
-      const response = await axios.get(`${API_URL}/files/${fileName}`, {
-        headers: { "User-ID": userId || "" },
-      });
-      console.log("File retrieved successfully:", response.data);
-    } catch (error) {
-      console.error("Error retrieving file:", error);
-    }
+  // Trigger suggestions on input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMessage = e.target.value;
+    setMessage(newMessage); // Update message state
+    fetchSuggestions(newMessage); // Fetch suggestions based on the input
   };
+
+  // Load chat history on mount
+  useEffect(() => {
+    loadChatHistory(); // Load chat history from localStorage when the component mounts
+  }, []);
 
   return {
     message,
@@ -118,8 +155,9 @@ export default function useChatLogic() {
     sendMessage,
     suggestions,
     fetchSuggestions,
-    getFile,
+    handleInputChange, // Input change handler for triggering suggestions
     citations,
-    setCitations
+    setCitations,
+    startSession, // Add startSession here to be passed down to LoginForm
   };
 }
