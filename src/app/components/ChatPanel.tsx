@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useCallback } from "react";
+import React, { ChangeEvent, useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from "react-spinners";
@@ -6,12 +6,11 @@ import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
 import SideBar from "./SideBar";
+import { faCommentDots, faUserPlus} from "@fortawesome/free-solid-svg-icons";
 
-interface ChatPanelProps {
-  setUploadedFilePath: React.Dispatch<React.SetStateAction<string>>;
-}
 
-const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
+
+const ChatPanel= () => {
   const {
     message,
     setMessage,
@@ -23,8 +22,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
     suggestions,
     fetchSuggestions,
     citations,
-    setCitations,
+    // setCitations,
+    // startSession
   } = useChatLogic();
+
+  const [filteredMessages, setFilteredMessages] = useState<any[]>([]); // Store filtered messages
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -46,8 +48,63 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
     }
   };
 
+  // Filter messages based on today's and tomorrow's date
+  const filterMessagesByDate = () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    const filtered = chatHistory.filter((msg) => {
+      const msgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+      return (
+        msgDate.toDateString() === today.toDateString() || // Today's messages
+        msgDate.toDateString() === tomorrow.toDateString() // Tomorrow's messages
+      );
+    });
+
+    setFilteredMessages(filtered);
+  };
+
+  // Triggered when starting a new chat
+  const handleNewChat = () => {
+    // Reset the states
+    setMessage("");
+    // setCitations([]);
+    setFilteredMessages([]); // Clear the filtered messages
+    // Optionally reset any other states here, like chat history or suggestions
+  };
+
+  // Filter messages on chat history change
+  useEffect(() => {
+    filterMessagesByDate();
+  }, [chatHistory]);
+
   return (
     <>
+      <motion.div
+        className="w-72 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <div className="p-4 flex flex-col space-y-6">
+          <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2 mb-4">
+            <FontAwesomeIcon icon={faCommentDots} className="text-blue-400" />
+            New Chat
+          </h3>
+
+          <button
+            onClick={handleNewChat} // Trigger new chat
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 w-full"
+          >
+            <FontAwesomeIcon icon={faUserPlus} />
+            <span>Start New Chat</span>
+          </button>
+
+          <div className="mt-6 text-sm text-gray-400"></div>
+        </div>
+      </motion.div>
+
       <motion.div
         className="flex-1 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
@@ -55,10 +112,13 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-4 shadow-2xl border border-gray-700/50">
-          <h2 className="text-xl font-bold text-gray-200 px-2 mb-4">Chat Assistant</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-200">Chat Assistant</h2>
+          </div>
+
           <div className="flex-1 overflow-y-auto bg-gray-900/80 rounded-xl p-4 shadow-inner border border-gray-700/30 mb-4">
             <div className="flex flex-col space-y-4">
-              {chatHistory.map((msg, idx) => (
+              {filteredMessages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[80%] p-3 rounded-xl shadow-lg break-words
@@ -71,6 +131,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
               {error && <p className="text-red-400 mt-2 px-4 py-2 bg-red-900/20 rounded-lg">{error}</p>}
             </div>
           </div>
+
           <div className="flex flex-col space-y-4 mt-auto">
             {suggestions.length > 0 && (
               <div className="bg-gray-900/80 rounded-xl shadow-lg border border-gray-700/30">
@@ -114,8 +175,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ setUploadedFilePath }) => {
           </div>
         </div>
       </motion.div>
+
       <motion.div
-        className="w-96 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
+        className="w-72 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}

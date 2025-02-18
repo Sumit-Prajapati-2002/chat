@@ -2,7 +2,7 @@ import { useAuth } from "@/app/context/AuthProvider";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { signOut } from "firebase/auth";
-import { auth } from "../auth/firebaseConfig";
+import { auth } from "../firebaseConfig";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 

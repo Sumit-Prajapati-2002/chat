@@ -1,7 +1,7 @@
 // components/RegisterForm.tsx
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../auth/firebaseConfig"; // Import Firebase auth
+import { auth } from "../firebaseConfig"; // Import Firebase auth
 
 interface RegisterFormProps {
   setLoginOpen: React.Dispatch<React.SetStateAction<boolean>>;

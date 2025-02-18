@@ -2,11 +2,11 @@
 
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+import { SetStateAction } from 'react';
 
 // Dynamically import components with no SSR
 const Navbar = dynamic(() => import('./Navbar'), { ssr: false });
 const ChatPanel = dynamic(() => import('./ChatPanel'), { ssr: false });
-const SideBar = dynamic(() => import('./SideBar'), { ssr: false });
 
 interface LayoutProps {
   userId: string;
@@ -74,9 +74,9 @@ export default function Layout({ userId }: LayoutProps) {
         <div className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex gap-8 h-[calc(100vh-theme(spacing.24))]">
             {/* Chat Panel with card styling */}
-            <ChatPanel/>
-
-            {/* Sidebar with card styling */}
+            <ChatPanel setUploadedFilePath={function (value: SetStateAction<string>): void {
+              throw new Error('Function not implemented.');
+            } }/>
             
           </div>
         </div>

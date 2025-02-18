@@ -1,71 +1,74 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 // API base URL
 const API_URL = "http://23.132.28.30:8000"; 
 
-export default function useChatLogic() {
-  const [message, setMessage] = useState<string>(""); // Store user input
-  const [chatHistory, setChatHistory] = useState<any[]>([]); // Store chat history
-  const [isSending, setIsSending] = useState<boolean>(false); // Track sending state
-  const [error, setError] = useState<string | null>(null); // Store any errors
-  const [suggestions, setSuggestions] = useState<string[]>([]); // Store suggestions
-  const [citations, setCitations] = useState<string[]>([]); // Store citations
+type Message = {
+  role: "user" | "bot" | "error";
+  content: string;
+  timestamp?: string;
+};
 
-  // Start session function (connects to backend API)
+export default function useChatLogic() {
+  const [message, setMessage] = useState<string>("");
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [citations, setCitations] = useState<string[]>([]);
+
+  // Start session function
   const startSession = async () => {
     try {
       const response = await axios.get(`${API_URL}/start-session`);
       if (response.data.user_id) {
-        localStorage.setItem('user_id', response.data.user_id); // Store user_id in localStorage
+        localStorage.setItem('user_id', response.data.user_id);
         console.log("Session started with user_id:", response.data.user_id);
       } else {
         console.error("No user_id returned from the backend.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error starting session:", error);
     }
   };
 
-  // Base64 encode function
-  const encodeBase64 = (data: string) => {
-    return btoa(unescape(encodeURIComponent(data))); // Encode data to Base64
-  };
+  // Base64 encode/decode functions
+  const encodeBase64 = (data: string) => btoa(unescape(encodeURIComponent(data)));
+  const decodeBase64 = (data: string) => decodeURIComponent(escape(atob(data)));
 
-  // Base64 decode function
-  const decodeBase64 = (data: string) => {
-    return decodeURIComponent(escape(atob(data))); // Decode data from Base64
-  };
-
-  // Function to save chat history to localStorage in Base64 format
-  const saveChatHistory = (chatHistory: any[]) => {
+  // Save chat history to localStorage
+  const saveChatHistory = (chatHistory: Message[]) => {
     const encodedHistory = chatHistory.map((message) => ({
       ...message,
-      content: encodeBase64(message.content), // Encode each message content in Base64
+      content: encodeBase64(message.content),
     }));
     localStorage.setItem('chatHistory', JSON.stringify(encodedHistory));
   };
 
-  // Function to load chat history from localStorage
-  const loadChatHistory = () => {
+  // Load chat history from localStorage
+  const loadChatHistory = useCallback(() => {
     const savedHistory = localStorage.getItem('chatHistory');
     if (savedHistory) {
       try {
-        // Parse and decode each message's content from Base64
-        const decodedHistory = JSON.parse(savedHistory).map((message: any) => ({
+        const decodedHistory: Message[] = JSON.parse(savedHistory).map((message: Message) => ({
           ...message,
-          content: decodeBase64(message.content), // Decode each message content from Base64
+          content: decodeBase64(message.content),
         }));
         setChatHistory(decodedHistory);
       } catch (error) {
-        console.error("Error loading chat history:", error); // Optionally log error
+        console.error("Error loading chat history:", error);
       }
     }
-  };
+  }, []);
 
-  // Function to send message and receive a response from the backend
+  useEffect(() => {
+    loadChatHistory();
+  }, [loadChatHistory]);
+
+  // Send message function
   const sendMessage = async (message: string) => {
     if (!message.trim() || isSending) return;
 
@@ -79,71 +82,56 @@ export default function useChatLogic() {
         { question: message },
         { headers: { "User-ID": userId || "" } }
       );
-      setChatHistory((prev) => [
-        ...prev,
-        { role: "bot", content: response.data.response || "No response from bot." },
-      ]);
+      
+      const botMessage = response.data.response || "No response from bot.";
       setCitations(response.data.citations || []);
 
-      // Save bot response to localStorage (encoded in Base64)
-      const botMessage = response.data.response || "No response from bot.";
-      setChatHistory((prev) => [
-        ...prev,
-        { role: "bot", content: botMessage },
-      ]);
-
-      // Save both user and bot messages to localStorage (encoded)
-      saveChatHistory([...chatHistory, { role: "user", content: message }, { role: "bot", content: botMessage }]);
+      setChatHistory((prevChatHistory) => {
+        const updatedHistory: Message[] = [...prevChatHistory, { role: "bot", content: botMessage }];
+        saveChatHistory(updatedHistory);
+        return updatedHistory;
+      });
 
       if (response.data.suggestions?.length) {
         setSuggestions(response.data.suggestions);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
       setError(errorMessage);
       setChatHistory((prev) => [...prev, { role: "error", content: errorMessage }]);
     } finally {
       setIsSending(false);
-      setMessage(""); // Clear input after sending
+      setMessage("");
     }
   };
 
-  // Fetch suggestions based on user input (auto-fetch on message change)
+  // Fetch suggestions
   const fetchSuggestions = async (input: string) => {
     if (input.trim() === "") {
-      setSuggestions([]); // Clear suggestions when input is empty
+      setSuggestions([]);
       return;
     }
 
     try {
       const userId = localStorage.getItem("user_id");
       const response = await axios.get(`${API_URL}/ask`, {
-        params: { query: input }, // Send input as query parameter
+        params: { query: input },
         headers: { "User-ID": userId || "" },
       });
-
-      if (response.data.suggestions) {
-        setSuggestions(response.data.suggestions); // Set suggestions from response
-      } else {
-        setSuggestions([]); // Clear suggestions if no data
-      }
+      
+      setSuggestions(response.data.suggestions || []);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
-      setSuggestions([]); // Handle error and clear suggestions
+      setSuggestions([]);
     }
   };
 
-  // Trigger suggestions on input change
+  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMessage = e.target.value;
-    setMessage(newMessage); // Update message state
-    fetchSuggestions(newMessage); // Fetch suggestions based on the input
+    setMessage(newMessage);
+    fetchSuggestions(newMessage);
   };
-
-  // Load chat history on mount
-  useEffect(() => {
-    loadChatHistory(); // Load chat history from localStorage when the component mounts
-  }, []);
 
   return {
     message,
@@ -155,9 +143,9 @@ export default function useChatLogic() {
     sendMessage,
     suggestions,
     fetchSuggestions,
-    handleInputChange, // Input change handler for triggering suggestions
+    handleInputChange,
     citations,
     setCitations,
-    startSession, // Add startSession here to be passed down to LoginForm
+    startSession,
   };
 }
