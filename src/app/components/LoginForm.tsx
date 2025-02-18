@@ -1,8 +1,7 @@
 // components/LoginForm.tsx
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebaseConfig"; // Import Firebase auth
-
+import { auth } from "../auth/firebaseConfig"; // Import Firebase auth
 
 interface LoginFormProps {
   setLoginOpen: React.Dispatch<React.SetStateAction<boolean>>;

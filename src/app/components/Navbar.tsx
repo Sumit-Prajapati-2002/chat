@@ -1,7 +1,7 @@
 // components/Navbar.tsx
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { auth } from "../firebaseConfig"; // Add this line to import auth
+import { auth } from "../auth/firebaseConfig"; // Add this line to import auth
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 
