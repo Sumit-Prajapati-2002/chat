@@ -71,7 +71,7 @@ export default function useChatLogic() {
   const isValidBase64 = (str: string) => {
     try {
       return btoa(atob(str)) === str;
-    } catch (_error) {
+    } catch (_) {
       return false;
     }
   };

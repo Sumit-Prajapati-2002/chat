@@ -16,11 +16,12 @@ const LoginForm = ({ setLoginOpen, startSession }: LoginFormProps) => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password); // Firebase login
-      setLoginOpen(false); // Close the modal on success
-      startSession(); // Start the session after successful login
+      await signInWithEmailAndPassword(auth, email, password);
+      setLoginOpen(false);
+      startSession();
     } catch (error: unknown) {
-      // Handle error
+      // Handle error properly
+      console.error("Login error:", error instanceof Error ? error.message : "Unknown error");
     }
     setLoading(false);
   };

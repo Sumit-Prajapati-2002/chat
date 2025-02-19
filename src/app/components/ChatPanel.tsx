@@ -8,8 +8,8 @@ import { motion } from "framer-motion";
 import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 import SideBar from "./SideBar";
 
-// Define type for chat history
-interface ChatMessage {
+// Define proper type instead of any
+interface ChatHistoryItem {
   role: "user" | "bot" | "error";
   content: string;
 }
@@ -27,7 +27,7 @@ const ChatPanel = () => {
     startNewChat
   } = useChatLogic();
 
-  const [chatHistoryList, setChatHistoryList] = useState<ChatMessage[][]>([]);
+  const [chatHistoryList, setChatHistoryList] = useState<ChatHistoryItem[][]>([]);
   const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 

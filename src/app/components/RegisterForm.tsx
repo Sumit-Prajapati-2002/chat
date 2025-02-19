@@ -16,10 +16,11 @@ const RegisterForm = ({ setLoginOpen }: RegisterFormProps) => {
   const handleRegister = async () => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password); // Firebase register
-      setLoginOpen(false); // Close the modal on success
-    } catch (error:unknown) {
-      // Handle error
+      await createUserWithEmailAndPassword(auth, email, password);
+      setLoginOpen(false);
+    } catch (error: unknown) {
+      // Handle error properly
+      console.error("Registration error:", error instanceof Error ? error.message : "Unknown error");
     }
     setLoading(false);
   };
