@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
 import SideBar from "./SideBar";
-import { faCommentDots, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 
 interface ChatMessage {
   role: "user" | "bot" | "error";
@@ -111,7 +111,6 @@ const ChatPanel = () => {
             <FontAwesomeIcon icon={faCommentDots} className="text-blue-400" />
             New Chat
           </h3>
-          <FontAwesomeIcon icon={faUserPlus} />
 
           <button
             onClick={handleNewChat}

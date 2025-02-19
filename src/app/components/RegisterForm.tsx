@@ -12,21 +12,27 @@ const RegisterForm = ({ setLoginOpen }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRegister = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       setLoginOpen(false);
     } catch (error: unknown) {
-      // Handle error properly
-      console.error("Registration error:", error instanceof Error ? error.message : "Unknown error");
+      const message = error instanceof Error ? error.message : "An error occurred during registration";
+      setErrorMessage(message);
+      console.error("Registration error:", message);
     }
     setLoading(false);
   };
 
   return (
     <div className="space-y-4">
+      {errorMessage && (
+        <div className="text-red-500 text-sm">{errorMessage}</div>
+      )}
       <input
         type="email"
         placeholder="Email"
