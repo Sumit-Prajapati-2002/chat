@@ -13,7 +13,6 @@ type Message = {
 export default function useChatLogic() {
   const [message, setMessage] = useState<string>("");
   const [currentChatHistory, setCurrentChatHistory] = useState<Message[]>([]);
-  const [previousChats, setPreviousChats] = useState<Message[][]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [citations, setCitations] = useState<string[]>([]);
@@ -79,14 +78,13 @@ export default function useChatLogic() {
       setIsSending(false);
       setMessage("");
     }
-  }, [isSending, setMessage]); // Add all required dependencies
+  }, [isSending, setMessage]);
 
   return {
     message,
     setMessage,
     isButtonEnabled: !!message.trim(),
     currentChatHistory,
-    previousChats,
     error,
     isSending,
     sendMessage,
