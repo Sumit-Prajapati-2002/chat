@@ -8,21 +8,19 @@ interface LoginFormProps {
   startSession: () => void; // Accept the startSession function as a prop
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen, startSession }) => {
+const LoginForm = ({ setLoginOpen, startSession }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleLogin = async () => {
     setLoading(true);
-    setError(""); // Reset previous errors
     try {
       await signInWithEmailAndPassword(auth, email, password); // Firebase login
       setLoginOpen(false); // Close the modal on success
       startSession(); // Start the session after successful login
     } catch (error: unknown) {
-      setError("Failed to log in. Please check your credentials.");
+      // Handle error
     }
     setLoading(false);
   };
@@ -43,7 +41,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen, startSession }) => 
         onChange={(e) => setPassword(e.target.value)}
         className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
       />
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
       <button
         onClick={handleLogin}
         disabled={loading}

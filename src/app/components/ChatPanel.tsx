@@ -5,8 +5,14 @@ import { ClipLoader } from "react-spinners";
 import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
-import { faCommentDots, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 import SideBar from "./SideBar";
+
+// Define type for chat history
+interface ChatMessage {
+  role: "user" | "bot" | "error";
+  content: string;
+}
 
 const ChatPanel = () => {
   const {
@@ -21,7 +27,7 @@ const ChatPanel = () => {
     startNewChat
   } = useChatLogic();
 
-  const [chatHistoryList, setChatHistoryList] = useState<any[][]>([]);
+  const [chatHistoryList, setChatHistoryList] = useState<ChatMessage[][]>([]);
   const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 

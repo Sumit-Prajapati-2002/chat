@@ -8,20 +8,18 @@ interface RegisterFormProps {
 }
 
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ setLoginOpen }) => {
+const RegisterForm = ({ setLoginOpen }: RegisterFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleRegister = async () => {
     setLoading(true);
-    setError(""); // Reset previous errors
     try {
       await createUserWithEmailAndPassword(auth, email, password); // Firebase register
       setLoginOpen(false); // Close the modal on success
     } catch (error:unknown) {
-      setError("Failed to register. Please try again.");
+      // Handle error
     }
     setLoading(false);
   };
@@ -42,7 +40,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setLoginOpen }) => {
         onChange={(e) => setPassword(e.target.value)}
         className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-black"
       />
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
       <button
         onClick={handleRegister}
         disabled={loading}

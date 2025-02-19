@@ -71,7 +71,7 @@ export default function useChatLogic() {
   const isValidBase64 = (str: string) => {
     try {
       return btoa(atob(str)) === str;
-    } catch (err) {
+    } catch (_error) {
       return false;
     }
   };
@@ -122,7 +122,7 @@ export default function useChatLogic() {
       localStorage.removeItem('chatHistory');
       setCurrentChatHistory([]);
     }
-  }, []);
+  }, [decodeBase64]);
 
   useEffect(() => {
     loadChatHistory();
