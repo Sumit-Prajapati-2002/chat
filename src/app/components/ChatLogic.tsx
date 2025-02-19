@@ -37,41 +37,90 @@ export default function useChatLogic() {
   // Start a new chat
   const startNewChat = async () => {
     if (currentChatHistory.length > 0) {
-      // Save current chat to previous chats before starting a new one
       setPreviousChats((prevChats) => [...prevChats, currentChatHistory]);
     }
-    setCurrentChatHistory([]); // Reset current chat history
-    setError(null); // Clear any previous errors
-    // setSuggestions([]); // commented out
-    await startSession(); // Start a new session with the server
+    setCurrentChatHistory([]);
+    setError(null);
+    await startSession();
   };
 
-  // Base64 encode/decode functions
-  const encodeBase64 = (data: string) => btoa(unescape(encodeURIComponent(data)));
-  const decodeBase64 = (data: string) => decodeURIComponent(escape(atob(data)));
-
-  // Save chat history to localStorage
-  const saveChatHistory = (chatHistory: Message[]) => {
-    const encodedHistory = chatHistory.map((message) => ({
-      ...message,
-      content: encodeBase64(message.content),
-    }));
-    localStorage.setItem('chatHistory', JSON.stringify(encodedHistory));
+  // Improved Base64 encode/decode functions with error handling
+  const encodeBase64 = (data: string) => {
+    try {
+      return btoa(unescape(encodeURIComponent(data)));
+    } catch (error) {
+      console.error('Error encoding data:', error);
+      return '';
+    }
   };
 
-  // Load chat history from localStorage
-  const loadChatHistory = useCallback(() => {
-    const savedHistory = localStorage.getItem('chatHistory');
-    if (savedHistory) {
-      try {
-        const decodedHistory: Message[] = JSON.parse(savedHistory).map((message: Message) => ({
-          ...message,
-          content: decodeBase64(message.content),
-        }));
-        setCurrentChatHistory(decodedHistory);
-      } catch (error) {
-        console.error("Error loading chat history:", error);
+  const decodeBase64 = (data: string) => {
+    try {
+      // Check if the string is valid base64
+      if (!isValidBase64(data)) {
+        throw new Error('Invalid base64 string');
       }
+      return decodeURIComponent(escape(atob(data)));
+    } catch (error) {
+      console.error('Error decoding data:', error);
+      return '';
+    }
+  };
+
+  // Helper function to check if a string is valid base64
+  const isValidBase64 = (str: string) => {
+    try {
+      return btoa(atob(str)) === str;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Save chat history to localStorage with error handling
+  const saveChatHistory = (chatHistory: Message[]) => {
+    try {
+      const encodedHistory = chatHistory.map((message) => ({
+        ...message,
+        content: encodeBase64(message.content),
+      }));
+      localStorage.setItem('chatHistory', JSON.stringify(encodedHistory));
+    } catch (error) {
+      console.error('Error saving chat history:', error);
+    }
+  };
+
+  // Load chat history from localStorage with error handling
+  const loadChatHistory = useCallback(() => {
+    try {
+      const savedHistory = localStorage.getItem('chatHistory');
+      if (!savedHistory) return;
+
+      const parsedHistory = JSON.parse(savedHistory);
+      if (!Array.isArray(parsedHistory)) {
+        throw new Error('Invalid chat history format');
+      }
+
+      const decodedHistory: Message[] = parsedHistory.map((message: Message) => {
+        try {
+          return {
+            ...message,
+            content: message.content ? decodeBase64(message.content) : '',
+          };
+        } catch (error) {
+          console.error('Error decoding message:', error);
+          return {
+            ...message,
+            content: 'Error loading message',
+          };
+        }
+      });
+
+      setCurrentChatHistory(decodedHistory);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      // Clear invalid data from localStorage
+      localStorage.removeItem('chatHistory');
+      setCurrentChatHistory([]);
     }
   }, []);
 
@@ -151,7 +200,7 @@ export default function useChatLogic() {
     setMessage,
     isButtonEnabled: !!message.trim(),
     currentChatHistory,
-    previousChats, // Return previous chats for display
+    previousChats,
     error,
     isSending,
     sendMessage,
@@ -161,6 +210,6 @@ export default function useChatLogic() {
     citations,
     setCitations,
     startSession,
-    startNewChat, // New function to start a new chat while keeping old chats
+    startNewChat,
   };
 }

@@ -5,8 +5,8 @@ import { ClipLoader } from "react-spinners";
 import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
-import SideBar from "./SideBar";
 import { faCommentDots, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import SideBar from "./SideBar";
 
 const ChatPanel = () => {
   const {
@@ -21,9 +21,9 @@ const ChatPanel = () => {
     startNewChat
   } = useChatLogic();
 
-  const [chatHistoryList, setChatHistoryList] = useState<any[][]>([]); // List of all chat histories
-  const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null); // Track current active chat index
-  const [isProcessing, setIsProcessing] = useState(false); // State to track backend processing status
+  const [chatHistoryList, setChatHistoryList] = useState<any[][]>([]);
+  const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -43,20 +43,20 @@ const ChatPanel = () => {
   // Handle starting a new chat
   const handleNewChat = () => {
     if (currentChatIndex !== null) {
-      const newChatHistory = [...chatHistoryList]; // Store the current chat history separately
-      newChatHistory.push(currentChatHistory); // Save current chat to list
-      setChatHistoryList(newChatHistory); // Update the list with new chat
+      const newChatHistory = [...chatHistoryList];
+      newChatHistory.push(currentChatHistory);
+      setChatHistoryList(newChatHistory);
     }
-    setMessage(""); // Reset the message input
-    setCurrentChatIndex(null); // Reset the active chat
-    startNewChat(); // Start new chat session with backend
+    setMessage("");
+    setCurrentChatIndex(null);
+    startNewChat();
   };
 
   // Handle deleting previous chat
   const handleDeleteChat = (index: number) => {
     const updatedChatHistoryList = chatHistoryList.filter((_, i) => i !== index);
     setChatHistoryList(updatedChatHistoryList);
-    setCurrentChatIndex(null); // Reset the active chat after deleting
+    setCurrentChatIndex(null);
   };
 
   // Handle switching between chats
@@ -86,7 +86,7 @@ const ChatPanel = () => {
 
   return (
     <>
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <motion.div
         className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
@@ -98,7 +98,6 @@ const ChatPanel = () => {
             <FontAwesomeIcon icon={faCommentDots} className="text-blue-400" />
             New Chat
           </h3>
-          <FontAwesomeIcon icon={faUserPlus} />
 
           <button
             onClick={handleNewChat}
@@ -195,7 +194,7 @@ const ChatPanel = () => {
         </div>
       </motion.div>
 
-      {/* Sidebar (on larger screens) */}
+      {/* Right Sidebar */}
       <motion.div
         className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
