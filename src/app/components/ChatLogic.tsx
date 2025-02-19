@@ -16,7 +16,7 @@ export default function useChatLogic() {
   const [previousChats, setPreviousChats] = useState<Message[][]>([]); // Store previous chats
   const [isSending, setIsSending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  // const [suggestions, setSuggestions] = useState<string[]>([]); // commented out
   const [citations, setCitations] = useState<string[]>([]);
 
   // Start session function
@@ -42,7 +42,7 @@ export default function useChatLogic() {
     }
     setCurrentChatHistory([]); // Reset current chat history
     setError(null); // Clear any previous errors
-    setSuggestions([]); // Clear suggestions
+    // setSuggestions([]); // commented out
     await startSession(); // Start a new session with the server
   };
 
@@ -103,9 +103,9 @@ export default function useChatLogic() {
         return updatedHistory;
       });
 
-      if (response.data.suggestions?.length) {
-        setSuggestions(response.data.suggestions);
-      }
+      // if (response.data.suggestions?.length) {
+      //   setSuggestions(response.data.suggestions);
+      // }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
       setError(errorMessage);
@@ -116,7 +116,8 @@ export default function useChatLogic() {
     }
   };
 
-  // Fetch suggestions
+  // Comment out fetch suggestions function
+  /*
   const fetchSuggestions = async (input: string) => {
     if (input.trim() === "") {
       setSuggestions([]);
@@ -136,12 +137,13 @@ export default function useChatLogic() {
       setSuggestions([]);
     }
   };
+  */
 
-  // Handle input change
+  // Simplify handleInputChange
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMessage = e.target.value;
     setMessage(newMessage);
-    fetchSuggestions(newMessage);
+    // fetchSuggestions(newMessage); // commented out
   };
 
   return {
@@ -153,8 +155,8 @@ export default function useChatLogic() {
     error,
     isSending,
     sendMessage,
-    suggestions,
-    fetchSuggestions,
+    // suggestions, // commented out
+    // fetchSuggestions, // commented out
     handleInputChange,
     citations,
     setCitations,
