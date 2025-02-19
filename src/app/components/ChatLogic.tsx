@@ -38,15 +38,6 @@ export default function useChatLogic() {
     setError(null);
   }, []);
 
-  // Helper function to check if a string is valid base64
-  const isValidBase64 = (str: string) => {
-    try {
-      return btoa(atob(str)) === str;
-    } catch (_) { // Use underscore for unused parameter
-      return false;
-    }
-  };
-
   // Send message function
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || isSending) return;
