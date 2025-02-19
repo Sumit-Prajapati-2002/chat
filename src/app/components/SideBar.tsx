@@ -14,7 +14,7 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loadingCitations] = useState(false);
+  const [loadingCitations, setLoadingCitations] = useState(false);
 
   useEffect(() => {
     const fetchSessionId = async () => {
@@ -39,6 +39,12 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
       fetchSessionId();
     }
   }, []);
+
+  useEffect(() => {
+    setLoadingCitations(true);
+    // Do something with citations
+    setLoadingCitations(false);
+  }, [citations]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files ? e.target.files[0] : null;
@@ -72,6 +78,10 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCitationClick = (citation: string) => {
+    console.log('Citation clicked:', citation);
   };
 
   return (
@@ -132,7 +142,7 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
             <ul className="space-y-2">
               {citations.map((citation, index) => (
                 <li key={index} className="glassmorphism-dark p-3 rounded-lg text-white/80 text-sm">
-                  <a href={citation} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  <a href={citation} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline" onClick={() => handleCitationClick(citation)}>
                     {citation}
                   </a>
                 </li>

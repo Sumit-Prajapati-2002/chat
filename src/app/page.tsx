@@ -1,25 +1,18 @@
 'use client';
-import ChatPanel from "./components/ChatPanel";
-import SideBar from "./components/SideBar";
-import Layout from "./components/Layout";
-import { useState } from 'react';
+import ChatPanel from './components/ChatPanel';
+// Remove unused imports
+// import SideBar from './components/SideBar';
+// import { useState } from 'react';
 
 export default function Home() {
- 
-
-  // For demo purposes, we'll use a fixed userId
-  // In a real app, this would come from your authentication system
-  const userId = "user123";
+  // Remove unused userId or use it
+  // const [userId, setUserId] = useState<string | null>(null);
 
   return (
-    <>
-      <Layout>
-        <div className="flex flex-1 space-x-6">
-          {/* Pass the state setter, file path, and userId to ChatPanel and SideBar */}
-          <ChatPanel/>
-        </div>
-      </Layout>
-      
-    </>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
+        <ChatPanel />
+      </div>
+    </main>
   );
 }
