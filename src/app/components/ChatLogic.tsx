@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
@@ -14,7 +12,8 @@ type Message = {
 
 export default function useChatLogic() {
   const [message, setMessage] = useState<string>("");
-  const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [currentChatHistory, setCurrentChatHistory] = useState<Message[]>([]);
+  const [previousChats, setPreviousChats] = useState<Message[][]>([]); // Store previous chats
   const [isSending, setIsSending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -33,6 +32,18 @@ export default function useChatLogic() {
     } catch (error: unknown) {
       console.error("Error starting session:", error);
     }
+  };
+
+  // Start a new chat
+  const startNewChat = async () => {
+    if (currentChatHistory.length > 0) {
+      // Save current chat to previous chats before starting a new one
+      setPreviousChats((prevChats) => [...prevChats, currentChatHistory]);
+    }
+    setCurrentChatHistory([]); // Reset current chat history
+    setError(null); // Clear any previous errors
+    setSuggestions([]); // Clear suggestions
+    await startSession(); // Start a new session with the server
   };
 
   // Base64 encode/decode functions
@@ -57,7 +68,7 @@ export default function useChatLogic() {
           ...message,
           content: decodeBase64(message.content),
         }));
-        setChatHistory(decodedHistory);
+        setCurrentChatHistory(decodedHistory);
       } catch (error) {
         console.error("Error loading chat history:", error);
       }
@@ -73,7 +84,7 @@ export default function useChatLogic() {
     if (!message.trim() || isSending) return;
 
     setIsSending(true);
-    setChatHistory((prev) => [...prev, { role: "user", content: message }]);
+    setCurrentChatHistory((prev) => [...prev, { role: "user", content: message }]);
 
     try {
       const userId = localStorage.getItem("user_id");
@@ -86,7 +97,7 @@ export default function useChatLogic() {
       const botMessage = response.data.response || "No response from bot.";
       setCitations(response.data.citations || []);
 
-      setChatHistory((prevChatHistory) => {
+      setCurrentChatHistory((prevChatHistory) => {
         const updatedHistory: Message[] = [...prevChatHistory, { role: "bot", content: botMessage }];
         saveChatHistory(updatedHistory);
         return updatedHistory;
@@ -98,7 +109,7 @@ export default function useChatLogic() {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
       setError(errorMessage);
-      setChatHistory((prev) => [...prev, { role: "error", content: errorMessage }]);
+      setCurrentChatHistory((prev) => [...prev, { role: "error", content: errorMessage }]);
     } finally {
       setIsSending(false);
       setMessage("");
@@ -137,7 +148,8 @@ export default function useChatLogic() {
     message,
     setMessage,
     isButtonEnabled: !!message.trim(),
-    chatHistory,
+    currentChatHistory,
+    previousChats, // Return previous chats for display
     error,
     isSending,
     sendMessage,
@@ -147,5 +159,6 @@ export default function useChatLogic() {
     citations,
     setCitations,
     startSession,
+    startNewChat, // New function to start a new chat while keeping old chats
   };
 }

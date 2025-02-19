@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebaseConfig"; // Import Firebase auth
-import axios from "axios";
+
 
 interface LoginFormProps {
   setLoginOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -21,7 +21,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ setLoginOpen, startSession }) => 
       await signInWithEmailAndPassword(auth, email, password); // Firebase login
       setLoginOpen(false); // Close the modal on success
       startSession(); // Start the session after successful login
-    } catch (err) {
+    } catch (error: unknown) {
       setError("Failed to log in. Please check your credentials.");
     }
     setLoading(false);

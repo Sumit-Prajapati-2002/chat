@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import axios from "axios";
+import { error } from "console";
 
 const API_URL = "http://23.132.28.30:8000"; // Base URL
 
@@ -23,7 +24,7 @@ export default function useChatLogic() {
       } else {
         console.error("No user_id returned from the backend.");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (error.response) {
         console.error("Error status:", error.response.status);
         console.error("Error data:", error.response.data);
@@ -55,7 +56,7 @@ export default function useChatLogic() {
       if (response.data.suggestions?.length) {
         setSuggestions(response.data.suggestions);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error.response?.data?.message || "An unexpected error occurred.";
       setError(errorMessage);
       setChatHistory((prev) => [...prev, { role: "error", content: errorMessage }]);

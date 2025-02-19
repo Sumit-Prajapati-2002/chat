@@ -24,6 +24,7 @@
     "bcryptjs": "^2.4.3",
     "firebase": "^11.3.0",
     "framer-motion": "^12.4.1",
+    "iron-session": "^8.0.4",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "lodash.debounce": "^4.0.8",

@@ -14,7 +14,7 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loadingCitations, setLoadingCitations] = useState(false);
+  const [loadingCitations] = useState(false);
 
   useEffect(() => {
     const fetchSessionId = async () => {

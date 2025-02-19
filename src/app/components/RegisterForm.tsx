@@ -7,6 +7,7 @@ interface RegisterFormProps {
   setLoginOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+
 const RegisterForm: React.FC<RegisterFormProps> = ({ setLoginOpen }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +20,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setLoginOpen }) => {
     try {
       await createUserWithEmailAndPassword(auth, email, password); // Firebase register
       setLoginOpen(false); // Close the modal on success
-    } catch (err) {
+    } catch (error:unknown) {
       setError("Failed to register. Please try again.");
     }
     setLoading(false);
