@@ -1,3 +1,5 @@
+'use client';
+
 import { useAuth } from "@/app/context/AuthProvider";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -17,7 +19,7 @@ export default function Navbar() {
     try {
       await signOut(auth);
     } catch (err) {
-      console.error("Logout failed", err);
+      console.error("Logout failed:", err instanceof Error ? err.message : "Unknown error");
     }
     setLogoutLoading(false);
   };
@@ -61,14 +63,21 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Login/Register Modal */}
       {isLoginOpen && (
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={() => setLoginOpen(false)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
           <motion.div
             className="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
           >
             <h2 className="text-3xl font-bold mb-4 text-center text-purple-600">
               {isRegister ? "Register" : "Login"}
@@ -77,15 +86,13 @@ export default function Navbar() {
             {isRegister ? (
               <RegisterForm setLoginOpen={setLoginOpen} />
             ) : (
-              <LoginForm setLoginOpen={setLoginOpen} startSession={function (): void {
-                  throw new Error("Function not implemented.");
-                } } />
+              <LoginForm setLoginOpen={setLoginOpen} startSession={() => {}} />
             )}
 
             <div className="mt-4 text-center">
               <span
                 onClick={() => setIsRegister(!isRegister)}
-                className="text-blue-600 cursor-pointer"
+                className="text-blue-600 cursor-pointer hover:underline"
               >
                 {isRegister ? "Already have an account? Login" : "Don't have an account? Register"}
               </span>

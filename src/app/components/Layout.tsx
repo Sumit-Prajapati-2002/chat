@@ -1,17 +1,13 @@
 'use client';
 
 import React from 'react';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-
-// Dynamically import components with no SSR
-const Navbar = dynamic(() => import('./Navbar'), { ssr: false });
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-[#0B1120] overflow-hidden">
       {/* Animated Background */}
@@ -62,18 +58,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="relative flex flex-col min-h-screen">
-        {/* Navbar */}
-        <div className="z-50">
-          <Navbar />
-        </div>
-
-        {/* Main content with max-width container */}
-        <div className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex gap-8 h-[calc(100vh-theme(spacing.24))]">
-            {children}
-          </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex gap-8 h-[calc(100vh-theme(spacing.24))]">
+          {children}
         </div>
       </div>
     </div>

@@ -1,15 +1,14 @@
-import React, { ChangeEvent, useState, useEffect } from "react";
+import React, { ChangeEvent, useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from "react-spinners";
 import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
-import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 import SideBar from "./SideBar";
+import { faCommentDots, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 
-// Define proper type instead of any
-interface ChatHistoryItem {
+interface ChatMessage {
   role: "user" | "bot" | "error";
   content: string;
 }
@@ -27,72 +26,80 @@ const ChatPanel = () => {
     startNewChat
   } = useChatLogic();
 
-  const [chatHistoryList, setChatHistoryList] = useState<ChatHistoryItem[][]>([]);
+  const [chatHistoryList, setChatHistoryList] = useState<ChatMessage[][]>([]);
   const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Load chat history from localStorage on component mount
+  // Load chat history only once on mount
   useEffect(() => {
-    const savedHistory = localStorage.getItem("chatHistory");
-    if (savedHistory) {
-      setChatHistoryList(JSON.parse(savedHistory));
-    }
-  }, []);
+    const loadHistory = () => {
+      try {
+        const savedHistory = localStorage.getItem("chatHistory");
+        if (savedHistory) {
+          const parsedHistory = JSON.parse(savedHistory);
+          if (Array.isArray(parsedHistory)) {
+            setChatHistoryList(parsedHistory);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      }
+    };
+    loadHistory();
+  }, []); // Empty dependency array
 
-  // Save chat history to localStorage whenever it changes
+  // Save chat history when chatHistoryList changes
   useEffect(() => {
-    if (chatHistoryList.length > 0) {
-      localStorage.setItem("chatHistory", JSON.stringify(chatHistoryList));
-    }
+    const saveHistory = () => {
+      if (chatHistoryList.length > 0) {
+        try {
+          localStorage.setItem("chatHistory", JSON.stringify(chatHistoryList));
+        } catch (error) {
+          console.error("Error saving chat history:", error);
+        }
+      }
+    };
+    saveHistory();
   }, [chatHistoryList]);
 
   // Handle starting a new chat
-  const handleNewChat = () => {
-    if (currentChatIndex !== null) {
-      const newChatHistory = [...chatHistoryList];
-      newChatHistory.push(currentChatHistory);
-      setChatHistoryList(newChatHistory);
+  const handleNewChat = useCallback(() => {
+    if (currentChatIndex !== null && currentChatHistory.length > 0) {
+      setChatHistoryList(prev => {
+        const newList = [...prev];
+        newList.push([...currentChatHistory]);
+        return newList;
+      });
     }
     setMessage("");
     setCurrentChatIndex(null);
     startNewChat();
-  };
+  }, [currentChatIndex, currentChatHistory, setMessage, startNewChat]);
 
   // Handle deleting previous chat
-  const handleDeleteChat = (index: number) => {
-    const updatedChatHistoryList = chatHistoryList.filter((_, i) => i !== index);
-    setChatHistoryList(updatedChatHistoryList);
+  const handleDeleteChat = useCallback((index: number) => {
+    setChatHistoryList(prev => prev.filter((_, i) => i !== index));
     setCurrentChatIndex(null);
-  };
+  }, []);
 
   // Handle switching between chats
-  const handleSwitchChat = (index: number) => {
+  const handleSwitchChat = useCallback((index: number) => {
     setCurrentChatIndex(index);
-  };
+  }, []);
 
-  // Simplify input change handler to remove suggestion fetching
-  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    const newMessage = e.target.value;
-    setMessage(newMessage);
-  };
+  const handleInputChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+  }, [setMessage]);
 
-  // Handle sending the message with simulated backend processing wait time
-  const handleSendMessage = async (message: string) => {
-    setIsProcessing(true); // Set processing state while sending message
-    await sendMessage(message); // Simulate the backend processing time
-    setIsProcessing(false); // Reset processing state once message is sent
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage(message); // Use the new message sending method
+      sendMessage(message);
     }
-  };
+  }, [message, sendMessage]);
 
   return (
     <>
-      {/* Left Sidebar */}
+      {/* Sidebar */}
       <motion.div
         className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
@@ -104,6 +111,7 @@ const ChatPanel = () => {
             <FontAwesomeIcon icon={faCommentDots} className="text-blue-400" />
             New Chat
           </h3>
+          <FontAwesomeIcon icon={faUserPlus} />
 
           <button
             onClick={handleNewChat}
@@ -183,13 +191,13 @@ const ChatPanel = () => {
                 style={{ minHeight: "60px", maxHeight: "120px" }}
               />
               <button
-                onClick={() => handleSendMessage(message)}
-                disabled={!isButtonEnabled || isSending || isProcessing}
+                onClick={() => sendMessage(message)}
+                disabled={!isButtonEnabled || isSending}
                 className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-lg shadow-lg transition-all duration-300
-                  ${isButtonEnabled && !isSending && !isProcessing ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"}`}
+                  ${isButtonEnabled && !isSending ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"}`}
               >
                 <FontAwesomeIcon icon={faPaperPlane} className="text-lg" />
-                {isProcessing && (
+                {isSending && (
                   <div className="absolute inset-0 flex justify-center items-center">
                     <ClipLoader color="white" size={20} />
                   </div>
@@ -200,7 +208,7 @@ const ChatPanel = () => {
         </div>
       </motion.div>
 
-      {/* Right Sidebar */}
+      {/* Sidebar (on larger screens) */}
       <motion.div
         className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
