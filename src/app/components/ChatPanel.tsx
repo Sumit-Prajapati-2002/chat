@@ -22,9 +22,11 @@ const ChatPanel = () => {
     citations,
     startNewChat
   } = useChatLogic();
-
+  
   const [chatHistoryList, setChatHistoryList] = useState<any[][]>([]); // List of all chat histories
   const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null); // Track current active chat index
+
+  const [showSuggestions, setShowSuggestions] = useState(true); // Control the visibility of suggestions
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -41,6 +43,17 @@ const ChatPanel = () => {
     }
   }, [chatHistoryList]);
 
+  // Hide suggestions after 3 seconds
+  useEffect(() => {
+    if (suggestions.length > 0) {
+      const timer = setTimeout(() => {
+        setShowSuggestions(false); // Hide suggestions after 3 seconds
+      }, 5000);
+
+      return () => clearTimeout(timer); // Cleanup timeout when suggestions change
+    }
+  }, [suggestions]);
+
   // Handle starting a new chat
   const handleNewChat = () => {
     if (currentChatIndex !== null) {
@@ -51,18 +64,6 @@ const ChatPanel = () => {
     setMessage(""); // Reset the message input
     setCurrentChatIndex(null); // Reset the active chat
     startNewChat(); // Start new chat session with backend
-  };
-
-  // Handle deleting previous chat
-  const handleDeleteChat = (index: number) => {
-    const updatedChatHistoryList = chatHistoryList.filter((_, i) => i !== index);
-    setChatHistoryList(updatedChatHistoryList);
-    setCurrentChatIndex(null); // Reset the active chat after deleting
-  };
-
-  // Handle switching between chats
-  const handleSwitchChat = (index: number) => {
-    setCurrentChatIndex(index);
   };
 
   // Handle suggestion click
@@ -149,7 +150,6 @@ const ChatPanel = () => {
 
           <div className="flex-1 overflow-y-auto bg-gray-900/80 rounded-xl p-4 shadow-inner border border-gray-700/30 mb-4">
           <div className="flex flex-col space-y-4">
-            {/* Ensure currentChatHistory or chatHistoryList[currentChatIndex] is an array */}
             {(currentChatIndex !== null && Array.isArray(chatHistoryList[currentChatIndex])
               ? chatHistoryList[currentChatIndex]
               : currentChatHistory || []
@@ -170,9 +170,8 @@ const ChatPanel = () => {
           </div>
           </div>
 
-
           <div className="flex flex-col space-y-4 mt-auto">
-            {suggestions.length > 0 && (
+            {showSuggestions && suggestions.length > 0 && (
               <div className="bg-gray-900/80 rounded-xl shadow-lg border border-gray-700/30">
                 <div className="flex flex-wrap gap-2 p-3">
                   {suggestions.map((suggestion, idx) => (
@@ -215,7 +214,6 @@ const ChatPanel = () => {
         </div>
       </motion.div>
 
-      {/* Sidebar (on larger screens) */}
       <motion.div
         className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
