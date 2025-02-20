@@ -1,12 +1,12 @@
 import React, { ChangeEvent, useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faBars } from "@fortawesome/free-solid-svg-icons";
 import { ClipLoader } from "react-spinners";
 import ReactMarkdown from "react-markdown";
 import useChatLogic from "./ChatLogic";
 import { motion } from "framer-motion";
 import SideBar from "./SideBar";
-import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
+import { faCommentDots, faQuoteLeft } from "@fortawesome/free-solid-svg-icons";
 
 interface ChatMessage {
   role: "user" | "bot" | "error";
@@ -28,6 +28,7 @@ const ChatPanel = () => {
 
   const [chatHistoryList, setChatHistoryList] = useState<ChatMessage[][]>([]);
   const [currentChatIndex, setCurrentChatIndex] = useState<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Load chat history only once on mount
   useEffect(() => {
@@ -99,9 +100,11 @@ const ChatPanel = () => {
 
   return (
     <>
-      {/* Sidebar */}
+      {/* Left Sidebar - Full layout on desktop, hidden in mobile unless menu open */}
       <motion.div
-        className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
+        className={`${
+          isMobileMenuOpen ? 'fixed inset-0 z-50 bg-gray-900/95' : 'hidden'
+        } md:relative md:block w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden`}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
@@ -144,18 +147,25 @@ const ChatPanel = () => {
         </div>
       </motion.div>
 
-      {/* Chat Assistant */}
+      {/* Main Chat Area */}
       <motion.div
         className="flex-1 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-4 shadow-2xl border border-gray-700/50">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-200">Chat Assistant</h2>
-          </div>
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-700/50">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-gray-200 hover:text-white"
+          >
+            <FontAwesomeIcon icon={faBars} className="text-xl" />
+          </button>
+          <h2 className="text-xl font-bold text-gray-200">Chat Assistant</h2>
+        </div>
 
+        <div className="flex flex-col h-[calc(100vh-theme(spacing.32))] md:h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-4 shadow-2xl border border-gray-700/50">
           <div className="flex-1 overflow-y-auto bg-gray-900/80 rounded-xl p-4 shadow-inner border border-gray-700/30 mb-4">
             <div className="flex flex-col space-y-4">
               {(currentChatIndex !== null && Array.isArray(chatHistoryList[currentChatIndex])
@@ -207,15 +217,23 @@ const ChatPanel = () => {
         </div>
       </motion.div>
 
-      {/* Sidebar (on larger screens) */}
+      {/* Right Sidebar - Citations */}
       <motion.div
-        className="w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
+        className="hidden md:block w-80 md:w-1/4 shrink-0 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl overflow-hidden"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <SideBar citations={citations} />
       </motion.div>
+
+      {/* Mobile Citations Button */}
+      <button
+        className="md:hidden fixed bottom-4 right-4 bg-blue-600 p-3 rounded-full shadow-lg"
+        onClick={() => {/* Show citations modal */}}
+      >
+        <FontAwesomeIcon icon={faQuoteLeft} className="text-white" />
+      </button>
     </>
   );
 };

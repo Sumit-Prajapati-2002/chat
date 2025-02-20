@@ -17,6 +17,49 @@ export default function useChatLogic() {
   const [error, setError] = useState<string | null>(null);
   const [citations, setCitations] = useState<string[]>([]);
 
+  // Send message function
+  const sendMessage = useCallback(async (message: string) => {
+    if (!message.trim() || isSending) return;
+
+    setIsSending(true);
+    setCurrentChatHistory((prev) => [...prev, { role: "user", content: message }]);
+
+    try {
+      const userId = localStorage.getItem("user_id");
+      const response = await axios.post(
+        `${API_URL}/ask`,
+        { question: message },
+        { 
+          headers: { 
+            "User-ID": userId || "",
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (response.data) {
+        const botMessage = response.data.response || "No response from bot.";
+        setCitations(response.data.citations || []);
+
+        setCurrentChatHistory((prevChatHistory) => {
+          const updatedHistory = [...prevChatHistory, { role: "bot" as const, content: botMessage }];
+          return updatedHistory;
+        });
+      } else {
+        throw new Error("No response data received");
+      }
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+      setError(errorMessage);
+      setCurrentChatHistory((prev) => [...prev, { role: "error" as const, content: errorMessage }]);
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
+      setMessage("");
+    }
+  }, [isSending, setMessage]);
+
   // Start session function
   const startSession = async () => {
     try {
@@ -37,39 +80,6 @@ export default function useChatLogic() {
     setCurrentChatHistory([]);
     setError(null);
   }, []);
-
-  // Send message function
-  const sendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || isSending) return;
-
-    setIsSending(true);
-    setCurrentChatHistory((prev) => [...prev, { role: "user", content: message }]);
-
-    try {
-      const userId = localStorage.getItem("user_id");
-      const response = await axios.post(
-        `${API_URL}/ask`,
-        { question: message },
-        { headers: { "User-ID": userId || "" } }
-      );
-
-      const botMessage = response.data.response || "No response from bot.";
-      setCitations(response.data.citations || []);
-
-      setCurrentChatHistory((prevChatHistory) => {
-        const updatedHistory = [...prevChatHistory, { role: "bot" as const, content: botMessage }];
-        return updatedHistory;
-      });
-
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
-      setError(errorMessage);
-      setCurrentChatHistory((prev) => [...prev, { role: "error" as const, content: errorMessage }]);
-    } finally {
-      setIsSending(false);
-      setMessage("");
-    }
-  }, [isSending, setMessage]);
 
   return {
     message,

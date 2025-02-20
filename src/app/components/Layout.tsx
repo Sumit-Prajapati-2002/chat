@@ -60,7 +60,11 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-8 h-[calc(100vh-theme(spacing.24))]">
+        <div className="hidden md:flex gap-8 h-[calc(100vh-theme(spacing.24))]">
+          {children}
+        </div>
+        {/* Mobile Layout */}
+        <div className="md:hidden flex flex-col gap-4">
           {children}
         </div>
       </div>
