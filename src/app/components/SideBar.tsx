@@ -19,7 +19,7 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
   useEffect(() => {
     const fetchSessionId = async () => {
       try {
-        const response = await axios.get("http://23.132.28.30:8000/start-session");
+        const response = await axios.get("/api/proxy?path=start-session");
         if (response.data?.user_id) {
           setSessionId(response.data.user_id);
           localStorage.setItem("session_id", response.data.user_id);
@@ -67,9 +67,14 @@ const SideBar: React.FC<SideBarProps> = ({ citations }) => {
 
     try {
       const response = await axios.post(
-        "http://23.132.28.30:8000/upload",
+        "/api/proxy?path=upload",
         formData,
-        { headers: { "Content-Type": "multipart/form-data", "Session-ID": sessionId } }
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data", 
+            "Session-ID": sessionId 
+          } 
+        }
       );
 
       console.log(response.data.message);
