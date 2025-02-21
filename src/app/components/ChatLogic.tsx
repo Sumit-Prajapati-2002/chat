@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import axios from "axios";
 
 // API base URL
-const API_URL = "http://23.132.28.30:8000"; 
+const API_URL = "/api/proxy";
 
 type Message = {
   role: "user" | "bot" | "error";
@@ -27,7 +27,7 @@ export default function useChatLogic() {
     try {
       const userId = localStorage.getItem("user_id");
       const response = await axios.post(
-        `${API_URL}/ask`,
+        `${API_URL}?path=ask`,
         { question: message },
         { 
           headers: { 
@@ -63,7 +63,7 @@ export default function useChatLogic() {
   // Start session function
   const startSession = async () => {
     try {
-      const response = await axios.get(`${API_URL}/start-session`);
+      const response = await axios.get(`${API_URL}?path=start-session`);
       if (response.data.user_id) {
         localStorage.setItem('user_id', response.data.user_id);
         console.log("Session started with user_id:", response.data.user_id);
