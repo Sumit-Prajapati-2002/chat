@@ -31,30 +31,28 @@ export async function POST(request: NextRequest) {
   const path = searchParams.get('path') || '';
   
   try {
-    let body;
-    const contentType = request.headers.get('Content-Type') || '';
-    
+    let response;
+    const contentType = request.headers.get('content-type') || '';
+
     if (contentType.includes('multipart/form-data')) {
       // Handle file upload
       const formData = await request.formData();
-      body = formData;
+      response = await fetch(`${API_URL}/${path}`, {
+        method: 'POST',
+        body: formData,
+      });
     } else {
       // Handle JSON data
-      body = await request.json();
+      const jsonData = await request.json();
+      response = await fetch(`${API_URL}/${path}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-ID': request.headers.get('User-ID') || '',
+        },
+        body: JSON.stringify(jsonData),
+      });
     }
-
-    const response = await fetch(`${API_URL}/${path}`, {
-      method: 'POST',
-      headers: {
-        'User-ID': request.headers.get('User-ID') || '',
-        'Session-ID': request.headers.get('Session-ID') || '',
-        // Don't set Content-Type for FormData, let fetch set it automatically
-        ...(contentType.includes('application/json') && {
-          'Content-Type': 'application/json'
-        })
-      },
-      body: contentType.includes('application/json') ? JSON.stringify(body) : body,
-    });
 
     const data = await response.json();
     return NextResponse.json(data);
